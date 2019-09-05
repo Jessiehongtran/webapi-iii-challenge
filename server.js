@@ -16,31 +16,39 @@ function logger(req, res, next) {
   next();
 };
 
-function atGate(req,res,next) {
-  console.log('At the gate, about to be eaten');
-  next();
-}
+server.use(logger);
 
-function auth(req,res,next) {
-  if(req.url === '/melon'){
-    next()
+function validateUserId(req,res,next, id) {
+  if (id === res.params.id){
+    res.send(req.user);
+    next();
   } else {
-    res.send('You shall not pass')
+    res.status(400).json({ message: "invalid user id" })
   }
 }
 
-server.get('/melon', (req,res) => {
-  console.log('Gate opening...');
-  console.log('Inside and safe');
-  res.send('Welcome Traveler')
-})
+server.use(validateUserId);
 
-server.get('/haha', (req,res) => {
-  res.send("Let's discover")
-})
+function validateUser(req,res,next) {
+  if (!req.body) {
+    res.status(400).json({ message: "missing user data" })
+  } else if (!req.body.name) {
+    res.status(400).json({ message: "missing required name field" })
+  } else {
+    next();
+  }
+}
 
+server.use(validateUser)
 
-server.use(logger)
-server.use(atGate)
-server.use(auth)
+function validatePost(req,res,next) {
+  if (!req.body) {
+    res.status(400).json({ message: "missing post data" })
+  } else if (!req.body.text) {
+    res.status(400).json({ message: "missing required text field" })
+  } else {
+    next();
+  }
+}
+
 module.exports = server;
